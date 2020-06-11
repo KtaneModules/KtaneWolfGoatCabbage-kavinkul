@@ -19,7 +19,7 @@ MonoBehaviour:
     because this riddle..... is on the bomb.
 
 
-    - Beta Release'
-  version: 0.2.2
+    TP Supported'
+  version: 1.0
   outputFolder: Build
   previewImage: {fileID: 2800000, guid: d7a7cf93dbd4c3c4282fa3faa75f89ef, type: 3}

@@ -245,13 +245,13 @@ public class WolfGoatCabbageScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = "Use !{0} c/cycle to cycle for creatures. Use !{0} reset to reset the module. Use !{0} board/aboard <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} left/right <1-digit number> to press the left or right button that many times. Use !{0} row to press row button.";
+    private readonly string TwitchHelpMessage = "Use !{0} c/cycle to cycle for creatures. Use !{0} reset to reset the module. Use !{0} board/aboard <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} left/right <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.";
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.Trim().ToLowerInvariant();
-        Match m = Regex.Match(command, @"^(?:(c|cycle)|(reset)|(a?board)((?: .+)*)|(left|right) (\d)|row)$");
+        Match m = Regex.Match(command, @"^(?:(c|cycle)|(reset)|(a?board)((?: .+)+)?|(left|right)( \d)?|row)$");
         if (m.Success)
         {
             if (m.Groups[1].Success)
@@ -309,8 +309,9 @@ public class WolfGoatCabbageScript : MonoBehaviour
             else if (m.Groups[5].Success)
             {
                 yield return null;
+                int times = int.TryParse(m.Groups[6].Value.Trim(), out times) ? times : 1;
                 int buttonIndex = m.Groups[5].Value == "left" ? 0 : 1;
-                for (int i = 0; i < int.Parse(m.Groups[6].Value) % _animalOnScreen.Length; i++)
+                for (int i = 0; i < times % _animalOnScreen.Length; i++)
                 {
                     yield return new WaitUntil(() => !_buttonAnimation[buttonIndex]);
                     Buttons[buttonIndex].GetComponent<KMSelectable>().OnInteract();
