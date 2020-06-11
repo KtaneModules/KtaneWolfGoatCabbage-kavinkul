@@ -1,0 +1,32 @@
+Images Information:
+The images are not included to prevent copyrights issue. The links to each image can be found here.
+Some images are cropped to ensure they fit the screen.
+
+Import these as sprites:
+Cat 1 - https://pixabay.com/photos/cat-young-animal-curious-wildcat-2083492/
+Wolf 1 - https://pixabay.com/photos/wolf-concerns-forest-predator-1336229/
+Rabbit 1 - https://pixabay.com/photos/hare-rabbit-pet-animal-world-cute-4375952/
+Berry 1 - https://pixabay.com/photos/blackthorn-plums-berry-blue-1621554/
+Fish 1 - https://pixabay.com/photos/sockeye-salmon-kenai-fish-wild-492258/
+Dog 1 - https://pixabay.com/photos/dog-pet-animal-doggy-sweet-cute-2810484/
+Duck 1 - https://pixabay.com/photos/ruddy-shelduck-duck-goose-bird-106544/
+Goose 1 - https://www.sunnyskyz.com/blog/1295/Dad-Tells-His-Son-If-He-Can-Bring-Home-A-Goose-Alive-He-ll-Give-Him-20-The-Result-Is-Priceless
+Fox 1 - https://pixabay.com/photos/mammals-fox-wildlife-natural-wild-3218028/
+Grass 1 - https://pixabay.com/photos/meadow-green-grass-landscape-196567/
+Rice 1 - https://pixabay.com/photos/rice-food-healthy-cuisine-meal-498688/
+Mouse 1 - https://pixabay.com/photos/animal-attractive-beautiful-boy-1238228/
+Bear 1 - https://pixabay.com/photos/bear-predator-brown-bear-dangerous-1376361/
+Cabbage 1 - https://pixabay.com/photos/savoy-kohl-savoy-cabbage-vegetables-3860933/
+Chicken 1 - https://pixabay.com/photos/hahn-gockel-chicken-hen-poultry-4872601/
+Corn 1 - https://pixabay.com/photos/pop-corn-yellow-popcorn-food-785074/
+Carrot 1 - https://pixabay.com/photos/carrots-carrot-vegetable-tomato-5237036/
+Horse 1 - https://pixabay.com/photos/horse-wild-horse-marsh-pony-swamp-60153/
+Earthworm 1 - https://pixabay.com/photos/earthworms-the-frog-s-perspective-2773457/
+Kiwi 1 - https://pixabay.com/photos/bird-sand-kiwi-4164829/
+Seeds 1 - https://pixabay.com/photos/seed-grain-plant-bean-sprouts-nuts-945877/
+Goat 1 - https://pixabay.com/photos/goat-animal-horns-mammals-creature-1438231/
+
+Assign these to material with KT/Mobile/Diffuse:
+Wood - https://pixabay.com/photos/wood-boards-texture-wooden-brown-2045379/
+Gold - https://pixabay.com/photos/color-concrete-design-gold-pattern-1845394/
+Mekong River - https://www.csds-chula.org/publications/2020/3/18/critical-nature-addressing-drought-climate-change-lancang-mekong-river
