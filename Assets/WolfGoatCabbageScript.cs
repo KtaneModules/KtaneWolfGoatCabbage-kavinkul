@@ -94,7 +94,6 @@ public class WolfGoatCabbageScript : MonoBehaviour
         StartCoroutine(ButtonAnimation(i));
         if (_moduleSolved) return;
         Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
-        StartCoroutine(ButtonAnimation(i));
         _currentAnimal = i == 0 ? (_currentAnimal + _animalOnScreen.Length - 1) % _animalOnScreen.Length : (_currentAnimal + 1) % _animalOnScreen.Length ;
         Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
         if (_onBoat.Contains(_animalOnScreen[_currentAnimal]))
