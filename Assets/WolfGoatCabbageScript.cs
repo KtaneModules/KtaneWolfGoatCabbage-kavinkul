@@ -189,6 +189,8 @@ public class WolfGoatCabbageScript : MonoBehaviour
         _onBoat.Clear();
         _finalShore.Clear();
         _startShore = _animalOnScreen.ToList();
+        LightObject[0].SetActive(false);
+        LightObject[1].SetActive(true);
         _onStartingShore = true;
         Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
         _currentAnimal = 0;
@@ -244,13 +246,13 @@ public class WolfGoatCabbageScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = "Use !{0} c/cycle to cycle for creatures. Use !{0} reset to reset the module. Use !{0} board/aboard <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} left/right <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.";
+    private readonly string TwitchHelpMessage = "Use !{0} c/cycle to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.";
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.Trim().ToLowerInvariant();
-        Match m = Regex.Match(command, @"^(?:(c|cycle)|(reset)|(a?board)((?: .+)+)?|(left|right)( \d)?|row)$");
+        Match m = Regex.Match(command, @"^(?:(c|cycle)|(reset)|(a?b(?:oard)?)((?: .+)+)?|(l(?:eft)?|r(?:ight)?)( \d)?|row)$");
         if (m.Success)
         {
             if (m.Groups[1].Success)
@@ -285,7 +287,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
                     string[] creatures = m.Groups[4].Value.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (creatures.Any(c => !_animalOnScreen.Select(x => x.ToLowerInvariant()).ToArray().Contains(c)))
                     {
-                        yield return "sendtochaterror At least one of the creature does not exist on the module. Please ensure that the creature is presented.";
+                        yield return "sendtochaterror At least one of the creatures does not exist on the module. Please ensure that the creature is presented. The valid creatures are Cat, Wolf, Rabbit, Berry, Fish, Dog, Duck, Goat, Fox, Grass, Rice, Mouse, Bear, Cabbage, Chicken, Goose, Corn, Carrot, Horse, Earthworm, Kiwi, and Seeds";
                         yield break;
                     }
                     yield return null;
@@ -309,7 +311,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             {
                 yield return null;
                 int times = int.TryParse(m.Groups[6].Value.Trim(), out times) ? times : 1;
-                int buttonIndex = m.Groups[5].Value == "left" ? 0 : 1;
+                int buttonIndex = m.Groups[5].Value[0] == 'l' ? 0 : 1;
                 for (int i = 0; i < times % _animalOnScreen.Length; i++)
                 {
                     yield return new WaitUntil(() => !_buttonAnimation[buttonIndex]);
