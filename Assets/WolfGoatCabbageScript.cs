@@ -252,7 +252,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
     private IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.Trim().ToLowerInvariant();
-        Match m = Regex.Match(command, @"^(?:(c|cycle)|(reset)|(a?b(?:oard)?)((?: .+)+)?|(l(?:eft)?|r(?:ight)?)( \d)?|row)$");
+        Match m = Regex.Match(command, @"^(?:(c(?:ycle)?)|(reset)|(a?b(?:oard)?)((?: .+)+)?|(l(?:eft)?|r(?:ight)?)( \d)?|row)$");
         if (m.Success)
         {
             if (m.Groups[1].Success)
