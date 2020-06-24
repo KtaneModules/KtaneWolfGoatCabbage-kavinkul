@@ -6,13 +6,13 @@ namespace WolfGoatCabbage
 {
     public class VertexCoverGraph
     {
-        private List<Vertex> _vertices = new List<Vertex>();
-        private List<Edge> _edges = new List<Edge>();
+        public List<Vertex> _vertices = new List<Vertex>();
+        public List<Edge> _edges = new List<Edge>();
         private List<int> _finalK = new List<int>();
         private List<Vertex> _minimumVertexCovers = new List<Vertex>();
         private List<Vertex> _currentVertexCovers = new List<Vertex>();
 
-        private struct Vertex
+        public struct Vertex
         {
             public string Name { get; set; }
             public List<Edge> ConnectingEdges { get; set; }
@@ -30,7 +30,7 @@ namespace WolfGoatCabbage
                 return Name == v.Name && ConnectingEdges.Equals(v.ConnectingEdges);
             }
         }
-        private struct Edge
+        public struct Edge
         {
             public Vertex Index1 { get; }
             public Vertex Index2 { get; }

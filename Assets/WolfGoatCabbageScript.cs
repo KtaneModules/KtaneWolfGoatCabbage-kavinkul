@@ -239,14 +239,43 @@ public class WolfGoatCabbageScript : MonoBehaviour
         });
         if (!listExist)
             Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Wait a minute. There is no conflict.", _moduleID);
+        GenerateSVG();
         _graph.BoundSearchTree(animalCount);
         _boatSize = _graph.AlcuinNumber();
         Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The Alcuin number for this group is {1}.", _moduleID, _boatSize);
         Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
     }
+    private void GenerateSVG()
+    {
+        string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\" fill=\"none\" width=\"75%\">" +
+                         "<style>" +
+                             ".node {{" +
+                                 "fill: black;" +
+                                 "font-size: 6px;"+
+                                 "text-anchor: middle;" +
+                                 "text-align: center;"+
+                                 "dominant-baseline: central;"+
+                             "}}"+
+                                 ".vertex {{"+
+                                 "fill: white;"+
+                                 "stroke: #000000;"+          
+                                 "stroke-width: 1;"+
+                             "}}"+
+                         "</style>"+
+                         "{1}" + 
+                     "</svg>";
+        string group = "<g transform=\"translate(52, 52)\">{0}</g>";
+        string node = "<g transform= \"translate(0, -43) rotate({0}, 0, 43) rotate(-{1}, 0, 0)\"><circle class=\"vertex\" cx=\"0\" cy=\"0\" r=\"8\"/><text class=\"node\">{2}</text></g>";
+        float graphSize = (float)_graph._vertices.Count;
+        string circles = String.Join("", _graph._vertices.Select((vertex, index) => String.Format(node, (float) index * 360f / graphSize, (float) index * 360f / graphSize, vertex.Name.Substring(0, 3))).ToArray());
+        string line = "<line x1=\"{0}\" y1=\"{1}\" x2=\"{2}\" y2=\"{3}\" stroke=\"black\" />";
+        string linesGroup = String.Join("", _graph._edges.Select(e => String.Format(line, 52f - 43f * Mathf.Sin(-2f * (float)_graph._vertices.IndexOf(e.Index1) * Mathf.PI / graphSize), 52f -43f * Mathf.Cos(-2f * (float)_graph._vertices.IndexOf(e.Index1) * Mathf.PI / graphSize), 52f - 43f * Mathf.Sin(-2f * (float)_graph._vertices.IndexOf(e.Index2) * Mathf.PI / graphSize), 52f - 43f * Mathf.Cos(-2f * (float)_graph._vertices.IndexOf(e.Index2) * Mathf.PI / graphSize))).ToArray());
+        group = String.Format(group,circles);
+        Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}]=svg[The following is the graph of the conflicts between creatures:]" + svg, _moduleID, linesGroup + group);
+    }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = "Use !{0} c/cycle to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.";
+    private readonly string TwitchHelpMessage = "Use !{0} c(ycle) to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.";
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
