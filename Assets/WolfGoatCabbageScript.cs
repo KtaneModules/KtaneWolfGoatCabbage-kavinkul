@@ -275,14 +275,15 @@ public class WolfGoatCabbageScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = "Use !{0} c(ycle) to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.";
+    private readonly string TwitchHelpMessage = "Use !{0} c(ycle) to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.\nCommands can be chained by seperating them with spaces or the following characters: (|,;) These characters must be used to chain any command after b(oard)/ab(oard). Using multiple of these characters in succession will result in an invalid command.";
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.Trim().ToLowerInvariant();
-        Match m = Regex.Match(command, @"^(?:(c(?:ycle)?)|(reset)|(a?b(?:oard)?)((?: .+)+)?|(l(?:eft)?|r(?:ight)?)( \d)?|row)$");
-        if (m.Success)
+        Match m = Regex.Match(command, @"(?:^|(?!^)(?:\s*[\|;,]|\s+)\s*)(?:(c(?:ycle)?)|(reset)|(a?b(?:oard)?)((?: [^\|;,]+)+)?|(l(?:eft)?|r(?:ight)?)\b( \d)?|(row)|(.+))($)?");
+        uint nthCommand = 1;
+        while (m.Success)
         {
             if (m.Groups[1].Success)
             {
@@ -316,7 +317,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
                     string[] creatures = m.Groups[4].Value.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (creatures.Any(c => !_animalOnScreen.Select(x => x.ToLowerInvariant()).ToArray().Contains(c)))
                     {
-                        yield return "sendtochaterror At least one of the creatures does not exist on the module. Please ensure that the creature is presented. The valid creatures are Cat, Wolf, Rabbit, Berry, Fish, Dog, Duck, Goat, Fox, Grass, Rice, Mouse, Bear, Cabbage, Chicken, Goose, Corn, Carrot, Horse, Earthworm, Kiwi, and Seeds";
+                        yield return String.Format("sendtochaterror The {0} command is invalid. Stop processing the command. At least one of the creatures does not exist on the module. Please ensure that the creature is presented. The valid creatures are Cat, Wolf, Rabbit, Berry, Fish, Dog, Duck, Goat, Fox, Grass, Rice, Mouse, Bear, Cabbage, Chicken, Goose, Corn, Carrot, Horse, Earthworm, Kiwi, and Seeds", Ordinals(nthCommand));
                         yield break;
                     }
                     yield return null;
@@ -349,16 +350,41 @@ public class WolfGoatCabbageScript : MonoBehaviour
                     yield return "trycancel";
                 }
             }
-            else
+            else if (m.Groups[7].Success)
             {
                 yield return null;
                 yield return new WaitUntil(() => !_buttonAnimation[3]);
                 Buttons[3].GetComponent<KMSelectable>().OnInteract();
                 yield return new WaitForSeconds(.1f);
             }
+            else if (m.Groups[8].Success)
+                break;
+            if (m.Groups[9].Success)
+                yield break;
+            m = m.NextMatch();
+            nthCommand++;
         }
-        else
-            yield return "sendtochaterror Valid commands are c/cycle, reset, board/aboard, left/right, and row. Use !{1} help to see the full command.";
-        yield break;
+        yield return String.Format("sendtochaterror The {0} command is invalid. Stop processing the command. Valid commands are c(ycle), reset, b(oard)/ab(oard), l(eft)/r(ight), and row. Use !{{1}} help to see the full commands.", Ordinals(nthCommand));
+    }
+    private string Ordinals(uint number)
+    {
+        switch (number % 100)
+        {
+            case 11:
+            case 12:
+            case 13:
+                return number + "th";
+        }
+        switch (number % 10)
+        {
+            case 1:
+                return number + "st";
+            case 2:
+                return number + "nd";
+            case 3:
+                return number + "rd";
+            default:
+                return number + "th";
+        }
     }
 }
