@@ -155,7 +155,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             if (_onBoat.Count == 0)
                 Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Moving to the other side of the river by yourself.", _moduleID);
             else
-                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Moving {1} to the other side of the river.", _moduleID, String.Join(", ", _onBoat.Select((s2, index) => index == _onBoat.Count - 1 && _onBoat.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Moving {1} to the other side of the river.", _moduleID, String.Join(_onBoat.Count == 2 ? " " : ", ", _onBoat.Select((s2, index) => index == _onBoat.Count - 1 && _onBoat.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
             List<string> animalOnNewShore = _onStartingShore ? _startShore.ToList() : _finalShore.ToList();
             animalOnNewShore.AddRange(_onBoat);
             if (_onStartingShore)
