@@ -16,7 +16,7 @@ namespace WolfGoatCabbage
         {
             public string Name { get; set; }
             public List<Edge> ConnectingEdges { get; set; }
-            public string[] Conflicts { get; }
+            public string[] Conflicts { get; private set; }
 
             public Vertex(string name, string[] conflicts)
             {
@@ -32,8 +32,8 @@ namespace WolfGoatCabbage
         }
         public struct Edge
         {
-            public Vertex Index1 { get; }
-            public Vertex Index2 { get; }
+            public Vertex Index1 { get; private set; }
+            public Vertex Index2 { get; private set; }
 
             public Edge(Vertex index1, Vertex index2)
             {

@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
 using WolfGoatCabbage;
-using KModkit;
 
 public class WolfGoatCabbageScript : MonoBehaviour 
 {
@@ -275,7 +274,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = "Use !{0} c(ycle) to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.\nCommands can be chained by seperating them with spaces or the following characters: (|,;) These characters must be used to chain any command after b(oard)/ab(oard). Using multiple of these characters in succession will result in an invalid command.";
+    private readonly string TwitchHelpMessage = "Use !{0} c(ycle) to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.\nCommands can be chained by seperating them with spaces or the following characters: ( | , ; ) These characters must be used to chain any command after b(oard)/ab(oard). Using multiple of these characters in succession will result in an invalid command.";
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
