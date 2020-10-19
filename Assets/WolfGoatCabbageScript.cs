@@ -12,7 +12,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
     public KMBombModule Module;
     public KMAudio Audio;
     public GameObject[] Images;
-    public GameObject[] Buttons;
+    public KMSelectable[] Buttons;
     public GameObject[] LightObject;
     public Light LightSource;
 
@@ -51,6 +51,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
     private string[] _animalOnScreen;
     private int _currentAnimal = 0;
     private bool[] _buttonAnimation = new bool[5] { false, false, false, false, false };
+    private bool _TwitchPlaysExecuteOnInvalid = false;
 
     static int moduleIdCounter = 1;
     private int _moduleID;
@@ -65,28 +66,29 @@ public class WolfGoatCabbageScript : MonoBehaviour
         for (int i = 0; i < 2; i++)
         {
             int j = i;
-            Buttons[j].GetComponent<KMSelectable>().OnInteract += delegate
+            Buttons[j].OnInteract += delegate
             {
                 CycleButtonPress(j);
                 return false;
             };
         }
-        Buttons[2].GetComponent<KMSelectable>().OnInteract += delegate
+        Buttons[2].OnInteract += delegate
         {
             AboardButtonPress();
             return false;
         };
-        Buttons[3].GetComponent<KMSelectable>().OnInteract += delegate
+        Buttons[3].OnInteract += delegate
         {
             RowButtonPress();
             return false;
         };
-        Buttons[4].GetComponent<KMSelectable>().OnInteract += delegate
+        Buttons[4].OnInteract += delegate
         {
             ResetButtonPress();
             return false;
         };
     }
+
     private void CycleButtonPress(int i)
     {
         if (_buttonAnimation[i]) return;
@@ -106,6 +108,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             LightObject[1].SetActive(true);
         }
     }
+
     private void AboardButtonPress()
     {
         if (_buttonAnimation[2]) return;
@@ -137,6 +140,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             Module.HandleStrike();
         }
     }
+
     private void RowButtonPress()
     {
         if (_buttonAnimation[3]) return;
@@ -179,6 +183,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             }
         }
     }
+
     private void ResetButtonPress()
     {
         if (_buttonAnimation[4]) return;
@@ -195,11 +200,12 @@ public class WolfGoatCabbageScript : MonoBehaviour
         _currentAnimal = 0;
         Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
     }
+
     private IEnumerator ButtonAnimation(int i)
     {
         _buttonAnimation[i] = true;
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        Buttons[i].GetComponent<KMSelectable>().Highlight.transform.localPosition -= new Vector3(0, 0, .05f);
+        Buttons[i].Highlight.transform.localPosition -= new Vector3(0, 0, .05f);
         for (int count = 0; count < 6; count++)
         {
             Buttons[i].transform.localPosition -= new Vector3(0, .00067f, 0);
@@ -210,9 +216,10 @@ public class WolfGoatCabbageScript : MonoBehaviour
             Buttons[i].transform.localPosition += new Vector3(0, .00067f, 0);
             yield return new WaitForSeconds(.005f);
         }
-        Buttons[i].GetComponent<KMSelectable>().Highlight.transform.localPosition += new Vector3(0, 0, .05f);
+        Buttons[i].Highlight.transform.localPosition += new Vector3(0, 0, .05f);
         _buttonAnimation[i] = false;
     }
+
     private void Generate()
     {
         int animalCount = Rnd.Range(6, 10);
@@ -244,6 +251,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
         Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The Alcuin number for this group is {1}.", _moduleID, _boatSize);
         Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
     }
+
     private void GenerateSVG()
     {
         string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\" fill=\"none\" width=\"75%\">" +
@@ -274,97 +282,124 @@ public class WolfGoatCabbageScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = "Use !{0} c(ycle) to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.\nCommands can be chained by seperating them with spaces or the following characters: ( | , ; ) These characters must be used to chain any command after b(oard)/ab(oard). Using multiple of these characters in succession will result in an invalid command.";
+    private readonly string TwitchHelpMessage = "Use !{0} c(ycle) to cycle for creatures. Use !{0} reset to reset the module. Use !{0} b(oard)/ab(oard) <creature> to board the specified creatures. The module will press aboard button if <creatures> is empty. Use !{0} l(eft)/r(ight) <1-digit number> to press the left or right button that many times. Default to 1 press if number is not specified. Use !{0} row to press row button.\nCommands can be chained by seperating them with spaces or the following characters: ( | , ; ) These characters must be used to chain any command after b(oard)/ab(oard). Using multiple of these characters in succession will result in an invalid command.\nCommands will be discarded by default upon encountering an invalid command. Use !{0} a(lways)e(xecute) <on|off> to allow execution up until when the invalid command is encountered. This command cannot be chained. Not specifying on or off will toggle the setting.";
 #pragma warning restore 414
+
+    sealed class WGCTwitchPlaysCommand
+    {
+        public int Index;
+        public float Delay;
+        public int Times;
+
+        public WGCTwitchPlaysCommand(int index, float delay, int times = 1)
+        {
+            Index = index;
+            Delay = delay;
+            Times = times;
+        }
+    }
+
+    private IEnumerator DoInteraction(WGCTwitchPlaysCommand nextTPCommand)
+    {
+        for (int i = 0; i < nextTPCommand.Times; i++)
+        {
+            yield return new WaitUntil(() => !_buttonAnimation[nextTPCommand.Index]);
+            Buttons[nextTPCommand.Index].OnInteract();
+            yield return new WaitForSeconds(nextTPCommand.Delay);
+        }
+    }
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.Trim().ToLowerInvariant();
-        Match m = Regex.Match(command, @"(?:^|(?!^)(?:\s*[\|;,]|\s+)\s*)(?:(c(?:ycle)?\b)|(reset)\b|(a?b(?:oard)?)\b((?: [^\|;,]+)+)?|(l(?:eft)?|r(?:ight)?)\b( \d)?|(row)\b|(.+))($)?");
+        Match m = Regex.Match(command, @"^a(?:lways)?e(?:xecute)?(?:\s+(on|off))?$");
+        if (m.Success)
+        {
+            yield return null;
+            if (m.Groups[1].Success)
+                _TwitchPlaysExecuteOnInvalid = m.Groups[1].Value == "on";
+            else
+                _TwitchPlaysExecuteOnInvalid = !_TwitchPlaysExecuteOnInvalid;
+            if (_TwitchPlaysExecuteOnInvalid)
+                yield return "sendtochat Commands will now always be executed whether there is an invalid command in the string or not.";
+            else
+                yield return "sendtochat Commands will now be prevented from executing if there is any invalid command in the string.";
+            yield break;
+        }
+        List<WGCTwitchPlaysCommand> buttonsToPress = new List<WGCTwitchPlaysCommand>();
+        m = Regex.Match(command, @"(?:^|(?!^)(?:\s*[\|;,]|\s+)\s*)((c(?:ycle)?\b)|(reset)\b|(a?b(?:oard)?)\b((?: [^\|;,]+)+)?|(l(?:eft)?|r(?:ight)?)\b( \d)?|(row)\b|(.+))$?");
         uint nthCommand = 1;
+        bool commandError = false;
+        bool animalError = false;
+        int animalIndex = _currentAnimal;
+        string commandName = "";
         while (m.Success)
         {
-            if (m.Groups[1].Success)
+            commandName = m.Groups[1].Value.Trim();
+            if (m.Groups[2].Success)
             {
-                yield return null;
                 for (int i = 0; i < _animalOnScreen.Length; i++)
-                {
-                    yield return new WaitUntil(() => !_buttonAnimation[1]);
-                    Buttons[1].GetComponent<KMSelectable>().OnInteract();
-                    yield return new WaitForSeconds(2);
-                    yield return "trycancel";
-                }
-            }
-            else if (m.Groups[2].Success)
-            {
-                yield return null;
-                yield return new WaitUntil(() => !_buttonAnimation[4]);
-                Buttons[4].GetComponent<KMSelectable>().OnInteract();
-                yield return new WaitForSeconds(.1f);
+                    buttonsToPress.Add(new WGCTwitchPlaysCommand(1, 2f));
             }
             else if (m.Groups[3].Success)
+                buttonsToPress.Add(new WGCTwitchPlaysCommand(4, .1f));
+            else if (m.Groups[4].Success)
             {
-                if (!m.Groups[4].Success)
-                {
-                    yield return null;
-                    yield return new WaitUntil(() => !_buttonAnimation[2]);
-                    Buttons[2].GetComponent<KMSelectable>().OnInteract();
-                    yield return new WaitForSeconds(.1f);
-                }
+                if (!m.Groups[5].Success)
+                    buttonsToPress.Add(new WGCTwitchPlaysCommand(2, .1f));
                 else
                 {
-                    string[] creatures = m.Groups[4].Value.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] creatures = m.Groups[5].Value.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (creatures.Any(c => !_animalOnScreen.Select(x => x.ToLowerInvariant()).ToArray().Contains(c)))
                     {
-                        yield return String.Format("sendtochaterror The {0} command is invalid. Stop processing the command. At least one of the creatures does not exist on the module. Please ensure that the creature is presented. The valid creatures are Cat, Wolf, Rabbit, Berry, Fish, Dog, Duck, Goat, Fox, Grass, Rice, Mouse, Bear, Cabbage, Chicken, Goose, Corn, Carrot, Horse, Earthworm, Kiwi, and Seeds", Ordinals(nthCommand));
-                        yield break;
+                        commandError = true;
+                        animalError = true;
+                        break;
                     }
-                    yield return null;
                     for (int i = 0; i < creatures.Length; i++)
                     {
-                        while (_animalOnScreen[_currentAnimal].ToLowerInvariant() != creatures[i])
-                        {
-                            yield return new WaitUntil(() => !_buttonAnimation[1]);
-                            Buttons[1].GetComponent<KMSelectable>().OnInteract();
-                            yield return new WaitForSeconds(.1f);
-                            yield return "trycancel";
-                        }
-                        yield return new WaitUntil(() => !_buttonAnimation[2]);
-                        Buttons[2].GetComponent<KMSelectable>().OnInteract();
-                        yield return new WaitForSeconds(.1f);
-                        yield return "trycancel";
+                        int goalIndex = Array.FindIndex(_animalOnScreen, animal => animal.Equals(creatures[i], StringComparison.InvariantCultureIgnoreCase));
+                        int count1 = (goalIndex - animalIndex + _animalOnScreen.Length) % _animalOnScreen.Length;
+                        int count2 = (animalIndex - goalIndex + _animalOnScreen.Length) % _animalOnScreen.Length;
+                        int indexToPress = count1 < count2 ? 1 : 0;
+                        int pressCounts = indexToPress == 1 ? count1 : count2;
+                        buttonsToPress.Add(new WGCTwitchPlaysCommand(indexToPress, .1f, pressCounts));
+                        buttonsToPress.Add(new WGCTwitchPlaysCommand(2, .1f));
+                        animalIndex = goalIndex;
                     }
                 }
             }
-            else if (m.Groups[5].Success)
+            else if (m.Groups[6].Success)
             {
-                yield return null;
-                int times = int.TryParse(m.Groups[6].Value.Trim(), out times) ? times : 1;
-                int buttonIndex = m.Groups[5].Value[0] == 'l' ? 0 : 1;
-                for (int i = 0; i < times % _animalOnScreen.Length; i++)
-                {
-                    yield return new WaitUntil(() => !_buttonAnimation[buttonIndex]);
-                    Buttons[buttonIndex].GetComponent<KMSelectable>().OnInteract();
-                    yield return new WaitForSeconds(.1f);
-                    yield return "trycancel";
-                }
-            }
-            else if (m.Groups[7].Success)
-            {
-                yield return null;
-                yield return new WaitUntil(() => !_buttonAnimation[3]);
-                Buttons[3].GetComponent<KMSelectable>().OnInteract();
-                yield return new WaitForSeconds(.1f);
+                int times = int.TryParse(m.Groups[7].Value.Trim(), out times) ? times : 1;
+                int buttonIndex = m.Groups[6].Value[0] == 'l' ? 0 : 1;
+                buttonsToPress.Add(new WGCTwitchPlaysCommand(buttonIndex, .1f, times % _animalOnScreen.Length));
             }
             else if (m.Groups[8].Success)
+                buttonsToPress.Add(new WGCTwitchPlaysCommand(3, .1f));
+            else if (m.Groups[9].Success)
+            {
+                commandError = true;
                 break;
-            if (m.Groups[9].Success)
-                yield break;
+            }
             m = m.NextMatch();
             nthCommand++;
         }
-        yield return String.Format("sendtochaterror The {0} command is invalid. Stop processing the command. Valid commands are c(ycle), reset, b(oard)/ab(oard), l(eft)/r(ight), and row. Use !{{1}} help to see the full commands.", Ordinals(nthCommand));
+        if (!commandError || _TwitchPlaysExecuteOnInvalid)
+        {
+            yield return null;
+            foreach (WGCTwitchPlaysCommand cmd in buttonsToPress)
+                yield return DoInteraction(cmd);
+        }
+        if (commandError)
+        {
+            if (Regex.IsMatch(commandName, @"\ba(?:lways)?e(?:xecute)?(?:\s+(on|off))?\b"))
+                yield return "sendtochaterror AlwaysExecute cannot be chained with other commands.";
+            else
+                yield return String.Format("sendtochaterror The {0} command ({1}) is invalid. {2}. {3}.", Ordinals(nthCommand), commandName, _TwitchPlaysExecuteOnInvalid ? "Stop processing commands" : "Aborting every command", animalError ? "At least one of the creatures does not exist on the module. Please ensure that the creature is presented. The valid creatures are Cat, Wolf, Rabbit, Berry, Fish, Dog, Duck, Goat, Fox, Grass, Rice, Mouse, Bear, Cabbage, Chicken, Goose, Corn, Carrot, Horse, Earthworm, Kiwi, and Seeds" : "Valid commands are c(ycle), reset, b(oard)/ab(oard), l(eft)/r(ight), row, and a(lways)e(xecute). Use !{1} help to see the full commands");
+        }
     }
+
     private string Ordinals(uint number)
     {
         switch (number % 100)
