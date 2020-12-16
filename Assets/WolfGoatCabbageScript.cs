@@ -52,6 +52,11 @@ public class WolfGoatCabbageScript : MonoBehaviour
     private int _currentAnimal = 0;
     private bool[] _buttonAnimation = new bool[5] { false, false, false, false, false };
     private bool _TwitchPlaysExecuteOnInvalid = false;
+    private Dictionary<string, string> _TwitchPlaysAnimalAliases = new Dictionary<string, string>()
+    {
+        { "worm", "earthworm" }
+    };
+
 
     static int moduleIdCounter = 1;
     private int _moduleID;
@@ -312,6 +317,11 @@ public class WolfGoatCabbageScript : MonoBehaviour
     private IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.Trim().ToLowerInvariant();
+        if (Regex.IsMatch(command, @"{|}"))
+        {
+            yield return "sendtochaterror Commands cannot contain braces.";
+            yield break;
+        }
         Match m = Regex.Match(command, @"^a(?:lways)?e(?:xecute)?(?:\s+(on|off))?$");
         if (m.Success)
         {
@@ -349,7 +359,13 @@ public class WolfGoatCabbageScript : MonoBehaviour
                     buttonsToPress.Add(new WGCTwitchPlaysCommand(2, .1f));
                 else
                 {
-                    string[] creatures = m.Groups[5].Value.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] creatures = m.Groups[5].Value.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(rawName =>
+                    {
+                        string parsedName;
+                        if (!_TwitchPlaysAnimalAliases.TryGetValue(rawName, out parsedName))
+                            parsedName = rawName;
+                        return parsedName;
+                    }).ToArray();
                     if (creatures.Any(c => !_animalOnScreen.Select(x => x.ToLowerInvariant()).ToArray().Contains(c)))
                     {
                         commandError = true;
