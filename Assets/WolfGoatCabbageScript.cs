@@ -56,7 +56,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
     {
         { "worm", "earthworm" }
     };
-
+    List<State> _solution = new List<State>();
 
     static int moduleIdCounter = 1;
     private int _moduleID;
@@ -163,18 +163,18 @@ public class WolfGoatCabbageScript : MonoBehaviour
             if (_onBoat.Count == 0)
                 Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Moving to the other side of the river by yourself.", _moduleID);
             else
-                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Moving {1} to the other side of the river.", _moduleID, String.Join(_onBoat.Count == 2 ? " " : ", ", _onBoat.Select((s2, index) => index == _onBoat.Count - 1 && _onBoat.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Moving {1} to the other side of the river.", _moduleID, string.Join(_onBoat.Count == 2 ? " " : ", ", _onBoat.Select((s2, index) => index == _onBoat.Count - 1 && _onBoat.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
             List<string> animalOnNewShore = _onStartingShore ? _startShore.ToList() : _finalShore.ToList();
             animalOnNewShore.AddRange(_onBoat);
             if (_onStartingShore)
             {
-                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The starting side of the river now has {1}.", _moduleID, animalOnNewShore.Count == 0 ? "nothing" : String.Join(animalOnNewShore.Count == 2 ? " " : ", ", animalOnNewShore.Select((s2, index) => index == animalOnNewShore.Count - 1 && animalOnNewShore.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
-                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The finishing side of the river now has {1}.", _moduleID, _finalShore.Count == 0 ? "nothing" : String.Join(_finalShore.Count == 2 ? " " : ", ", _finalShore.Select((s2, index) => index == _finalShore.Count - 1 && _finalShore.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The starting side of the river now has {1}.", _moduleID, animalOnNewShore.Count == 0 ? "nothing" : animalOnNewShore.Select(animal => animal.ToLowerInvariant()).JoinWithCommasOrAnd());
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The finishing side of the river now has {1}.", _moduleID, _finalShore.Count == 0 ? "nothing" : _finalShore.Select(animal => animal.ToLowerInvariant()).JoinWithCommasOrAnd());
             }
             else
             {
-                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The starting side of the river now has {1}.", _moduleID, _startShore.Count == 0 ? "nothing" : String.Join(_startShore.Count == 2 ? " " : ", ", _startShore.Select((s2, index) => index == _startShore.Count - 1 && _startShore.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
-                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The finishing side of the river now has {1}.", _moduleID, animalOnNewShore.Count == 0 ? "nothing" : String.Join(animalOnNewShore.Count == 2 ? " " : ", ", animalOnNewShore.Select((s2, index) => index == animalOnNewShore.Count - 1 && animalOnNewShore.Count != 1 ? "and " + s2.ToLowerInvariant() : s2.ToLowerInvariant()).ToArray()));
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The starting side of the river now has {1}.", _moduleID, _startShore.Count == 0 ? "nothing" : _startShore.Select(animal => animal.ToLowerInvariant()).JoinWithCommasOrAnd());
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The finishing side of the river now has {1}.", _moduleID, animalOnNewShore.Count == 0 ? "nothing" : animalOnNewShore.Select(animal => animal.ToLowerInvariant()).JoinWithCommasOrAnd());
             }
             if (!_onStartingShore && _startShore.Count == 0)
             {
@@ -227,15 +227,21 @@ public class WolfGoatCabbageScript : MonoBehaviour
 
     private void Generate()
     {
+        //Commented lines is an example of large boat graph.
         int animalCount = Rnd.Range(6, 10);
+        //int animalCount = 6;
+        //int kk = 0;
+        //int[] allAnimals = new[] { 20, 7, 13, 6, 15, 12 };
         while (_startShore.Count != animalCount)
         {
             int animal = Rnd.Range(0, _creaturesList.Length);
+            //int animal = allAnimals[kk];
+            //kk++;
             if (!_graph.CreateNode(_creaturesList[animal], _conflictList[_creaturesList[animal]])) continue;
             _startShore.Add(_creaturesList[animal]);
         }
         _animalOnScreen = _startShore.ToArray();
-        Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The creatures that you have are {1}.", _moduleID, String.Join(", ", _animalOnScreen.Select((x, index) => index == _animalOnScreen.Length - 1 ? "and " + x.ToLowerInvariant() : x.ToLowerInvariant()).ToArray()));
+        Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The creatures that you have are {1}.", _moduleID, string.Join(", ", _animalOnScreen.Select((x, index) => index == _animalOnScreen.Length - 1 ? "and " + x.ToLowerInvariant() : x.ToLowerInvariant()).ToArray()));
         _graph.GenerateConnectingEdge();
         Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] In this group, the conflicts for each creature are the following:", _moduleID);
         bool listExist = false;
@@ -244,16 +250,33 @@ public class WolfGoatCabbageScript : MonoBehaviour
             List<string> item = _animalOnScreen.Where(x => s != x && _graph.ContainEdge(s, x)).ToList();
             if (item.Count != 0)
             {
-                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] {1}: {2}", _moduleID, s, String.Join(item.Count == 2 ? " " : ", ", item.Select((s2, index) => index == item.Count - 1 && item.Count != 1 ? "and " + s2 : s2).ToArray()));
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] {1}: {2}", _moduleID, s, string.Join(item.Count == 2 ? " " : ", ", item.Select((s2, index) => index == item.Count - 1 && item.Count != 1 ? "and " + s2 : s2).ToArray()));
                 listExist = true;
             }
         });
         if (!listExist)
             Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Wait a minute. There is no conflict.", _moduleID);
         GenerateSVG();
-        _graph.BoundSearchTree(animalCount);
-        _boatSize = _graph.AlcuinNumber();
+        _boatSize = _graph.BoundSearchTree(animalCount);
+        try
+        {
+            _solution = BFS();
+        }
+        catch
+        {
+            Debug.LogFormat("<Wolf, Goat, and Cabbage #{0}> No solution for small boat. Adding 1 more space to the boat.", _moduleID);
+            _boatSize++;
+            _solution = BFS();
+        }
         Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] The Alcuin number for this group is {1}.", _moduleID, _boatSize);
+        Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] One possible solution starting from the initial state:", _moduleID);
+        foreach (State step in _solution)
+        {
+            if (step.Movement[0] == "")
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Move across the river by yourself alone.", _moduleID);
+            else
+                Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Move {1} across the river.", _moduleID, step.Movement.Select(animal => animal.ToLowerInvariant()).JoinWithCommasOrAnd());
+        }
         Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
     }
 
@@ -278,12 +301,47 @@ public class WolfGoatCabbageScript : MonoBehaviour
                      "</svg>";
         string group = "<g transform=\"translate(52, 52)\">{0}</g>";
         string node = "<g transform= \"translate(0, -43) rotate({0}, 0, 43) rotate(-{1}, 0, 0)\"><circle class=\"vertex\" cx=\"0\" cy=\"0\" r=\"8\"/><text class=\"node\">{2}</text></g>";
-        float graphSize = (float)_graph._vertices.Count;
-        string circles = String.Join("", _graph._vertices.Select((vertex, index) => String.Format(node, (float) index * 360f / graphSize, (float) index * 360f / graphSize, vertex.Name.Substring(0, 3))).ToArray());
+        float graphSize = _graph._vertices.Count;
+        string circles = string.Join("", _graph._vertices.Select((vertex, index) => string.Format(node, index * 360f / graphSize, index * 360f / graphSize, vertex.Name.Substring(0, 3))).ToArray());
         string line = "<line x1=\"{0}\" y1=\"{1}\" x2=\"{2}\" y2=\"{3}\" stroke=\"black\" />";
-        string linesGroup = String.Join("", _graph._edges.Select(e => String.Format(line, 52f - 43f * Mathf.Sin(-2f * (float)_graph._vertices.IndexOf(e.Index1) * Mathf.PI / graphSize), 52f -43f * Mathf.Cos(-2f * (float)_graph._vertices.IndexOf(e.Index1) * Mathf.PI / graphSize), 52f - 43f * Mathf.Sin(-2f * (float)_graph._vertices.IndexOf(e.Index2) * Mathf.PI / graphSize), 52f - 43f * Mathf.Cos(-2f * (float)_graph._vertices.IndexOf(e.Index2) * Mathf.PI / graphSize))).ToArray());
-        group = String.Format(group,circles);
+        string linesGroup = string.Join("", _graph._edges.Select(e => string.Format(line, 52f - 43f * Mathf.Sin(-2f * _graph._vertices.IndexOf(e.Index1) * Mathf.PI / graphSize), 52f -43f * Mathf.Cos(-2f * _graph._vertices.IndexOf(e.Index1) * Mathf.PI / graphSize), 52f - 43f * Mathf.Sin(-2f * _graph._vertices.IndexOf(e.Index2) * Mathf.PI / graphSize), 52f - 43f * Mathf.Cos(-2f * _graph._vertices.IndexOf(e.Index2) * Mathf.PI / graphSize))).ToArray());
+        group = string.Format(group,circles);
         Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}]=svg[The following is the graph of the conflicts between creatures:]" + svg, _moduleID, linesGroup + group);
+    }
+
+    private List<State> BFS()
+    {
+        Queue<State> queue = new Queue<State>();
+        HashSet<State> visited = new HashSet<State>();
+        queue.Enqueue(new State(_graph, _startShore.ToArray(), _finalShore.ToArray(), _boatSize, !_onStartingShore));
+        while (queue.Count != 0)
+        {
+            State currentState = queue.Dequeue();
+            visited.Add(currentState);
+            if (currentState.IsGoal())
+            {
+                List<State> solutions = new List<State>();
+                State currentLookupState = currentState;
+                while (currentLookupState.PreviousState != null)
+                {
+                    solutions.Add(currentLookupState);
+                    currentLookupState = currentLookupState.PreviousState;
+                }
+                queue.Clear();
+                visited.Clear();
+                solutions.Reverse();
+                return solutions;
+            }
+
+            List<State> nextStates = currentState.GetSuccessors();
+            foreach (State state in nextStates)
+            {
+                //if (!queue.Any(s => s.Equals(state)) && !visited.Any(s => s.Equals(state)))
+                if (!queue.Contains(state) && !visited.Contains(state))
+                    queue.Enqueue(state);
+            }
+        }
+        throw new Exception("Algorithm fails to find a solution. Please report the bug to the current maintainer.");
     }
 
 #pragma warning disable 414
@@ -436,5 +494,38 @@ public class WolfGoatCabbageScript : MonoBehaviour
             default:
                 return number + "th";
         }
+    }
+
+    private IEnumerator TwitchHandleForcedSolve()
+    {
+        yield return ProcessTwitchCommand("reset");
+
+        List<string> commands = ParseBFSResults();
+
+        yield return ProcessTwitchCommand(string.Join(" | ", commands.ToArray()));
+    }
+
+    private List<string> ParseBFSResults()
+    {
+        List<string> commands = new List<string>();
+
+        foreach (State step in _solution)
+        {
+            if (step.Movement[0] != "")
+            {
+                IEnumerable<string> allAnimalsToMove;
+                if (step.PreviousState.Movement != null)
+                    allAnimalsToMove = step.PreviousState.Movement.Where(animal => !step.Movement.Contains(animal)) //
+                                           .Concat(step.Movement.Where(animal => !step.PreviousState.Movement.Contains(animal)));
+                else
+                    allAnimalsToMove = step.Movement;
+                commands.Add(string.Format("b {0}", string.Join(" ", allAnimalsToMove.ToArray())));
+            }
+            else
+                commands.Add(string.Format("b {0}", string.Join(" ", step.PreviousState.Movement)));
+            commands.Add("row");
+        }
+
+        return commands;
     }
 }

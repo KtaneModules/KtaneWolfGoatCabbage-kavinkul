@@ -70,38 +70,7 @@ namespace WolfGoatCabbage
                     }
                 }));
         }
-        public int AlcuinNumber()
-        {
-            if (_finalK.Count(x => x == _vertices.Count - _minimumVertexCovers.Count) > 1) return _minimumVertexCovers.Count;
-            _finalK.Clear();
-            HashSet<Vertex> nonVertexCovers = new HashSet<Vertex>(_vertices.Where(x => !_minimumVertexCovers.Contains(x)));
-            for (int i = 1; i < Math.Pow(2, _minimumVertexCovers.Count); i++)
-            {
-                HashSet<Vertex> s1 = new HashSet<Vertex>();
-                for (int k = 0; k < _minimumVertexCovers.Count; k++)
-                {
-                    int nextDigitValue = (int)Math.Pow(2, k + 1);
-                    int currentDigitValue = (int)Math.Pow(2, k);
-                    if (i % nextDigitValue / currentDigitValue == 1) s1.Add(_minimumVertexCovers[k]);
-                }
-                HashSet<Vertex> x1 = new HashSet<Vertex>(nonVertexCovers.Where(x => !x.ConnectingEdges.Any(e => s1.Contains(e.Index1) || s1.Contains(e.Index2))));
-                for (int j = 1; j < Math.Pow(2, _minimumVertexCovers.Count); j++)
-                {
-                    HashSet<Vertex> s2 = new HashSet<Vertex>();
-                    for (int k = 0; k < _minimumVertexCovers.Count; k++)
-                    {
-                        int nextDigitValue = (int)Math.Pow(2, k + 1);
-                        int currentDigitValue = (int)Math.Pow(2, k);
-                        if (j % nextDigitValue / currentDigitValue == 1) s2.Add(_minimumVertexCovers[k]);
-                    }
-                    HashSet<Vertex> x2 = new HashSet<Vertex>(nonVertexCovers.Where(x => !x1.Contains(x)).Where(x => !x.ConnectingEdges.Any(e => s2.Contains(e.Index1) || s2.Contains(e.Index2))));
-                    x2.UnionWith(x1);
-                    HashSet<Vertex> x3 = new HashSet<Vertex>(nonVertexCovers.Where(x => !x2.Contains(x)));
-                    if (s1.Count + s2.Count >= x3.Count) return _minimumVertexCovers.Count;
-                }
-            }
-            return _minimumVertexCovers.Count + 1;
-        }
+        
         public int BoundSearchTree(int k)
         {
             if (k == 0 || _edges.Count == 0)
