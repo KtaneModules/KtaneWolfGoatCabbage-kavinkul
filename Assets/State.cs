@@ -115,4 +115,106 @@ namespace WolfGoatCabbage
             }
         }
     }
+
+    public sealed class MovementState : IEquatable<MovementState>, IComparable<MovementState>
+    {
+        public MovementState PreviousState { get; private set; }
+
+        public int CurrentIndex { get; private set; }
+
+        private int[] _allIndices;
+        private int[] _indexNotOnBoat;
+        private int _totalSteps;
+        private bool[] _isSelected;
+        private int _currentSpaceTaken;
+        private int _alcuinNumber;
+        private int _totalAnimals;
+
+        public MovementState(int currentIndex, int[] allIndices, int[] indexNotOnBoat, bool[] isSelected, int currentSpaceTaken, int alcuinNumber, int totalAnimals, MovementState previousState = null, int totalSteps = 0)
+        {
+            CurrentIndex = currentIndex;
+            _allIndices = allIndices;
+            _indexNotOnBoat = indexNotOnBoat;
+            _isSelected = isSelected;
+            _currentSpaceTaken = currentSpaceTaken;
+            _alcuinNumber = alcuinNumber;
+            _totalAnimals = totalAnimals;
+            if (_allIndices.Length != _isSelected.Length)
+                throw new Exception("_allIndices and _isSelected must have the same length.");
+            PreviousState = previousState;
+            _totalSteps = totalSteps;
+        }
+        
+        public List<MovementState> GetSuccessors()
+        {
+            List<MovementState> list = new List<MovementState>();
+            for (int i = 0; i < _allIndices.Length; i++)
+            {
+                if (_isSelected[i])
+                    continue;
+                int nextIndex = _allIndices[i];
+                int newSpaceTaken = _indexNotOnBoat.Contains(nextIndex) ? _currentSpaceTaken + 1 : _currentSpaceTaken - 1;
+                if (_currentSpaceTaken > _alcuinNumber)
+                    continue;
+                int stepCounts = Math.Min((nextIndex - CurrentIndex + _totalAnimals) % _totalAnimals, (CurrentIndex - nextIndex + _totalAnimals) % _totalAnimals);
+                bool[] newIsSelected = _isSelected.ToArray();
+                newIsSelected[i] = true;
+                list.Add(new MovementState(nextIndex, _allIndices, _indexNotOnBoat, newIsSelected, newSpaceTaken, _alcuinNumber, _totalAnimals, this, _totalSteps + stepCounts));
+            }
+            return list;
+        }
+
+        public bool IsGoal()
+        {
+            return _isSelected.All(x => x);
+        }
+
+        public int CompareTo(MovementState otherState)
+        {
+            if (otherState == null)
+                return 1;
+
+            return _totalSteps.CompareTo(otherState._totalSteps);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || !GetType().Equals(obj.GetType()))
+                return false;
+
+            return Equals((MovementState) obj);
+        }
+
+        public bool Equals(MovementState otherState)
+        {
+            return CurrentIndex == otherState.CurrentIndex &&
+                   _allIndices.SequenceEqual(otherState._allIndices) &&
+                   _indexNotOnBoat.SequenceEqual(otherState._indexNotOnBoat) &&
+                   _isSelected.SequenceEqual(otherState._isSelected) &&
+                   _currentSpaceTaken == otherState._currentSpaceTaken &&
+                   _alcuinNumber == otherState._alcuinNumber &&
+                   _totalAnimals == otherState._totalAnimals &&
+                   _totalSteps == otherState._totalSteps;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 31;
+                hash = hash * 47 + CurrentIndex;
+                foreach (int index in _allIndices)
+                    hash = hash * 11 + index;
+                foreach (int index in _indexNotOnBoat)
+                    hash = hash * 17 + index;
+                foreach (bool selected in _isSelected)
+                    hash = hash * 13 + selected.GetHashCode();
+                hash = hash * 19 + _currentSpaceTaken;
+                hash = hash * 23 + _alcuinNumber;
+                hash = hash * 67 + _totalAnimals;
+                hash = hash * 73 + _totalSteps;
+                return hash;
+            }
+        }
+    }
 }

@@ -470,7 +470,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             if (Regex.IsMatch(commandName, @"\ba(?:lways)?e(?:xecute)?(?:\s+(on|off))?\b"))
                 yield return "sendtochaterror AlwaysExecute cannot be chained with other commands.";
             else
-                yield return String.Format("sendtochaterror The {0} command ({1}) is invalid. {2}. {3}.", Ordinals(nthCommand), commandName, _TwitchPlaysExecuteOnInvalid ? "Stop processing commands" : "Aborting every command", animalError ? "At least one of the creatures does not exist on the module. Please ensure that the creature is presented. The valid creatures are Cat, Wolf, Rabbit, Berry, Fish, Dog, Duck, Goat, Fox, Grass, Rice, Mouse, Bear, Cabbage, Chicken, Goose, Corn, Carrot, Horse, Earthworm, Kiwi, and Seeds" : "Valid commands are c(ycle), reset, b(oard)/ab(oard), l(eft)/r(ight), row, and a(lways)e(xecute). Use !{1} help to see the full commands");
+                yield return string.Format("sendtochaterror The {0} command ({1}) is invalid. {2}. {3}.", Ordinals(nthCommand), commandName, _TwitchPlaysExecuteOnInvalid ? "Stop processing commands" : "Aborting every command", animalError ? "At least one of the creatures does not exist on the module. Please ensure that the creature is presented. The valid creatures are Cat, Wolf, Rabbit, Berry, Fish, Dog, Duck, Goat, Fox, Grass, Rice, Mouse, Bear, Cabbage, Chicken, Goose, Corn, Carrot, Horse, Earthworm, Kiwi, and Seeds" : "Valid commands are c(ycle), reset, b(oard)/ab(oard), l(eft)/r(ight), row, and a(lways)e(xecute). Use !{1} help to see the full commands");
         }
     }
 
@@ -509,23 +509,68 @@ public class WolfGoatCabbageScript : MonoBehaviour
     {
         List<string> commands = new List<string>();
 
+        int lastIndex = 0;
         foreach (State step in _solution)
         {
+            List<string> moveOrder = new List<string>();
             if (step.Movement[0] != "")
             {
+                int onBoatToRemoveCount = 0;
                 IEnumerable<string> allAnimalsToMove;
+                int previousBoatCount = 0;
                 if (step.PreviousState.Movement != null)
-                    allAnimalsToMove = step.PreviousState.Movement.Where(animal => !step.Movement.Contains(animal)) //
-                                           .Concat(step.Movement.Where(animal => !step.PreviousState.Movement.Contains(animal)));
+                {
+                    previousBoatCount = step.PreviousState.Movement.Length;
+                    var animalsToMoveOffTheBoat = step.PreviousState.Movement.Where(animal => !step.Movement.Contains(animal));
+                    onBoatToRemoveCount = animalsToMoveOffTheBoat.Count();
+                    allAnimalsToMove = animalsToMoveOffTheBoat.Concat(step.Movement.Where(animal => !step.PreviousState.Movement.Contains(animal)));
+                }
                 else
                     allAnimalsToMove = step.Movement;
-                commands.Add(string.Format("b {0}", string.Join(" ", allAnimalsToMove.ToArray())));
+                allAnimalsToMove = allAnimalsToMove.Where(x => !string.IsNullOrEmpty(x)).ToArray();
+                moveOrder = Dijkstra(allAnimalsToMove.ToArray(), onBoatToRemoveCount, previousBoatCount, lastIndex);
             }
             else
-                commands.Add(string.Format("b {0}", string.Join(" ", step.PreviousState.Movement)));
+                moveOrder = Dijkstra(step.PreviousState.Movement, step.PreviousState.Movement.Length, step.PreviousState.Movement.Length, lastIndex);
+            lastIndex = Array.IndexOf(_animalOnScreen, moveOrder.Last());
+            commands.Add(string.Format("b {0}", string.Join(" ", moveOrder.ToArray())));
             commands.Add("row");
         }
 
         return commands;
+    }
+
+    private List<string> Dijkstra(string[] animalToMove, int onBoatToRemoveCount, int onBoatCount, int lastIndex)
+    {
+        int[] allIndices = animalToMove.Select(animal => Array.IndexOf(_animalOnScreen, animal)).ToArray();
+        MovementState startingState = new MovementState(lastIndex, allIndices, allIndices.Skip(onBoatToRemoveCount).ToArray(), Enumerable.Range(0, animalToMove.Length).Select(x => false).ToArray(), onBoatCount, _boatSize, _animalOnScreen.Length);
+        List<MovementState> visited = new List<MovementState>();
+        PriorityQueue<MovementState> pQueue = new PriorityQueue<MovementState>();
+        pQueue.Enqueue(startingState);
+        while (pQueue.Count != 0)
+        {
+            MovementState currentState = pQueue.Dequeue();
+            visited.Add(currentState);
+            if (currentState.IsGoal())
+            {
+                List<string> result = new List<string>();
+                MovementState currentLookupState = currentState;
+                while (currentLookupState.PreviousState != null)
+                {
+                    result.Add(_animalOnScreen[currentLookupState.CurrentIndex]);
+                    currentLookupState = currentLookupState.PreviousState;
+                }
+                visited.Clear();
+                pQueue.Clear();
+                result.Reverse();
+                return result;
+            }
+            foreach (MovementState state in currentState.GetSuccessors())
+            {
+                if (!visited.Contains(state) && !pQueue.Contains(state))
+                    pQueue.Enqueue(state);
+            }
+        }
+        throw new Exception("Couldn't find the short animal movement order.");
     }
 }
