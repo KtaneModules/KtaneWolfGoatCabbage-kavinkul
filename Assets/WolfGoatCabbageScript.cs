@@ -15,7 +15,6 @@ public class WolfGoatCabbageScript : MonoBehaviour
     public KMBombModule Module;
     public KMSelectable[] Buttons;
     public Light LightSource;
-    public TextMesh AnimalName;
 
     private string[] _creaturesList = new string[] { "Cat", "Wolf", "Rabbit", "Berry", "Fish", "Dog", "Duck", "Goat", "Fox", "Grass", "Rice", "Mouse", "Bear", "Cabbage", "Chicken", "Goose", "Corn", "Carrot", "Horse", "Earthworm", "Kiwi", "Seeds" };
     private Dictionary<string, string[]> _conflictList = new Dictionary<string, string[]>()
@@ -63,22 +62,9 @@ public class WolfGoatCabbageScript : MonoBehaviour
     private int _moduleID;
     private bool _moduleSolved = false;
 
-    sealed class WolfGoatCabbageSettings
-    {
-        public bool CompetitiveMode = false;
-    };
-
-    private WolfGoatCabbageSettings _settings;
-
 
     private void Start() 
     {
-        var modConfig = new ModConfig<WolfGoatCabbageSettings>("Wolf, Goat, and Cabbage");
-        _settings = modConfig.Settings;
-        modConfig.Settings = _settings;
-
-        if (_settings.CompetitiveMode)
-            AnimalName.gameObject.SetActive(true);
         _moduleID = moduleIdCounter++;
         float scalar = transform.lossyScale.x;
         LightSource.range *= scalar;
@@ -114,12 +100,9 @@ public class WolfGoatCabbageScript : MonoBehaviour
         if (_buttonAnimation[i]) return;
         StartCoroutine(ButtonAnimation(i));
         if (_moduleSolved) return;
-        if (!_settings.CompetitiveMode)
-            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
+        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
         _currentAnimal = i == 0 ? (_currentAnimal + _animalOnScreen.Length - 1) % _animalOnScreen.Length : (_currentAnimal + 1) % _animalOnScreen.Length ;
-        if (!_settings.CompetitiveMode)
-            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
-        AnimalName.text = _animalOnScreen[_currentAnimal];
+        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
         if (_onBoat.Contains(_animalOnScreen[_currentAnimal]))
         {
             LightObject[1].SetActive(false);
@@ -196,10 +179,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             }
             if (!_onStartingShore && _startShore.Count == 0)
             {
-                if (!_settings.CompetitiveMode)
-                    Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
-                else
-                    AnimalName.gameObject.SetActive(false);
+                Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
                 LightObject[0].SetActive(false);
                 LightObject[1].SetActive(true);
                 Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] No more creature left on the starting side of the river. Solving the module.", _moduleID);
@@ -222,12 +202,9 @@ public class WolfGoatCabbageScript : MonoBehaviour
         LightObject[0].SetActive(false);
         LightObject[1].SetActive(true);
         _onStartingShore = true;
-        if (!_settings.CompetitiveMode)
-            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
+        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
         _currentAnimal = 0;
-        if (!_settings.CompetitiveMode)
-            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
-        AnimalName.text = _animalOnScreen[_currentAnimal];
+        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
     }
 
     private IEnumerator ButtonAnimation(int i)
@@ -311,9 +288,7 @@ public class WolfGoatCabbageScript : MonoBehaviour
             else
                 Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Move {1} across the river.", _moduleID, step.Movement.Select(animal => animal.ToLowerInvariant()).JoinWithCommasOrAnd());
         }
-        if (!_settings.CompetitiveMode)
-            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
-        AnimalName.text = _animalOnScreen[_currentAnimal];
+        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
     }
 
     private void GenerateSVG()
