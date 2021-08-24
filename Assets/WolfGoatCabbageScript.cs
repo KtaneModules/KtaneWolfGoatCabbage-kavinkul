@@ -4,17 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using Rnd = UnityEngine.Random;
 using WolfGoatCabbage;
+using Rnd = UnityEngine.Random;
 
 public class WolfGoatCabbageScript : MonoBehaviour 
 {
-    public KMBombModule Module;
-    public KMAudio Audio;
     public GameObject[] Images;
-    public KMSelectable[] Buttons;
     public GameObject[] LightObject;
+    public KMAudio Audio;
+    public KMBombModule Module;
+    public KMSelectable[] Buttons;
     public Light LightSource;
+    public TextMesh AnimalName;
 
     private string[] _creaturesList = new string[] { "Cat", "Wolf", "Rabbit", "Berry", "Fish", "Dog", "Duck", "Goat", "Fox", "Grass", "Rice", "Mouse", "Bear", "Cabbage", "Chicken", "Goose", "Corn", "Carrot", "Horse", "Earthworm", "Kiwi", "Seeds" };
     private Dictionary<string, string[]> _conflictList = new Dictionary<string, string[]>()
@@ -62,8 +63,22 @@ public class WolfGoatCabbageScript : MonoBehaviour
     private int _moduleID;
     private bool _moduleSolved = false;
 
+    sealed class WolfGoatCabbageSettings
+    {
+        public bool CompetitiveMode = false;
+    };
+
+    private WolfGoatCabbageSettings _settings;
+
+
     private void Start() 
     {
+        var modConfig = new ModConfig<WolfGoatCabbageSettings>("Wolf, Goat, and Cabbage");
+        _settings = modConfig.Settings;
+        modConfig.Settings = _settings;
+
+        if (_settings.CompetitiveMode)
+            AnimalName.gameObject.SetActive(true);
         _moduleID = moduleIdCounter++;
         float scalar = transform.lossyScale.x;
         LightSource.range *= scalar;
@@ -99,9 +114,12 @@ public class WolfGoatCabbageScript : MonoBehaviour
         if (_buttonAnimation[i]) return;
         StartCoroutine(ButtonAnimation(i));
         if (_moduleSolved) return;
-        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
+        if (!_settings.CompetitiveMode)
+            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
         _currentAnimal = i == 0 ? (_currentAnimal + _animalOnScreen.Length - 1) % _animalOnScreen.Length : (_currentAnimal + 1) % _animalOnScreen.Length ;
-        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
+        if (!_settings.CompetitiveMode)
+            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
+        AnimalName.text = _animalOnScreen[_currentAnimal];
         if (_onBoat.Contains(_animalOnScreen[_currentAnimal]))
         {
             LightObject[1].SetActive(false);
@@ -178,7 +196,10 @@ public class WolfGoatCabbageScript : MonoBehaviour
             }
             if (!_onStartingShore && _startShore.Count == 0)
             {
-                Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
+                if (!_settings.CompetitiveMode)
+                    Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
+                else
+                    AnimalName.gameObject.SetActive(false);
                 LightObject[0].SetActive(false);
                 LightObject[1].SetActive(true);
                 Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] No more creature left on the starting side of the river. Solving the module.", _moduleID);
@@ -201,9 +222,12 @@ public class WolfGoatCabbageScript : MonoBehaviour
         LightObject[0].SetActive(false);
         LightObject[1].SetActive(true);
         _onStartingShore = true;
-        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
+        if (!_settings.CompetitiveMode)
+            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(false);
         _currentAnimal = 0;
-        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
+        if (!_settings.CompetitiveMode)
+            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
+        AnimalName.text = _animalOnScreen[_currentAnimal];
     }
 
     private IEnumerator ButtonAnimation(int i)
@@ -211,16 +235,26 @@ public class WolfGoatCabbageScript : MonoBehaviour
         _buttonAnimation[i] = true;
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
         Buttons[i].Highlight.transform.localPosition -= new Vector3(0, 0, .05f);
-        for (int count = 0; count < 6; count++)
+        Vector3 initialPosition = Buttons[i].transform.localPosition;
+        float totalDisplacement = 0f;
+        float targetDisplacement = 0.004f;
+        float targetDuration = 0.1f;
+        while(totalDisplacement <= targetDisplacement)
         {
-            Buttons[i].transform.localPosition -= new Vector3(0, .00067f, 0);
-            yield return new WaitForSeconds(.005f);
+            float distanceIncrement = Time.deltaTime * (targetDisplacement / targetDuration);
+            Buttons[i].transform.localPosition -= new Vector3(0, distanceIncrement, 0);
+            totalDisplacement += distanceIncrement;
+            yield return null;
         }
-        for (int count = 0; count < 6; count++)
+        totalDisplacement = 0f;
+        while (totalDisplacement <= targetDisplacement)
         {
-            Buttons[i].transform.localPosition += new Vector3(0, .00067f, 0);
-            yield return new WaitForSeconds(.005f);
+            float distanceIncrement = Time.deltaTime * (targetDisplacement / targetDuration);
+            Buttons[i].transform.localPosition += new Vector3(0, distanceIncrement, 0);
+            totalDisplacement += distanceIncrement;
+            yield return null;
         }
+        Buttons[i].transform.localPosition = initialPosition;
         Buttons[i].Highlight.transform.localPosition += new Vector3(0, 0, .05f);
         _buttonAnimation[i] = false;
     }
@@ -277,7 +311,9 @@ public class WolfGoatCabbageScript : MonoBehaviour
             else
                 Debug.LogFormat("[Wolf, Goat, and Cabbage #{0}] Move {1} across the river.", _moduleID, step.Movement.Select(animal => animal.ToLowerInvariant()).JoinWithCommasOrAnd());
         }
-        Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
+        if (!_settings.CompetitiveMode)
+            Images[Array.IndexOf(_creaturesList, _animalOnScreen[_currentAnimal])].SetActive(true);
+        AnimalName.text = _animalOnScreen[_currentAnimal];
     }
 
     private void GenerateSVG()
@@ -350,9 +386,9 @@ public class WolfGoatCabbageScript : MonoBehaviour
 
     sealed class WGCTwitchPlaysCommand
     {
-        public int Index;
-        public float Delay;
-        public int Times;
+        public int Index { get; private set; }
+        public float Delay { get; private set; }
+        public int Times { get; private set; }
 
         public WGCTwitchPlaysCommand(int index, float delay, int times = 1)
         {
